@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PayeeMatch.Api/PayeeMatch.Api.csproj" />
+    <Project Path="src/PayeeMatch.Core/PayeeMatch.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PayeeMatch.Api.Tests/PayeeMatch.Api.Tests.csproj" />
+  </Folder>
+</Solution>

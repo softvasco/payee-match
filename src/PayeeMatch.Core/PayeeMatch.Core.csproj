@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>PayeeMatch</PackageId>
+    <Description>Verification of Payee name matching for .NET, following the EPC VOP scheme.</Description>
+    <PackageTags>verification-of-payee;vop;sepa;instant-payments;name-matching;iban;fintech</PackageTags>
+  </PropertyGroup>
+</Project>
