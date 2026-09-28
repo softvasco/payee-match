@@ -1,10 +1,22 @@
 version: 2
 updates:
-  - package-ecosystem: "nuget"
-    directory: "/"
-    schedule: { interval: "weekly" }
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
     groups:
-      all: { patterns: ["*"] }
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule: { interval: "weekly" }
+      # test packages move together and rarely break anything
+      test:
+        patterns: ["xunit*", "Microsoft.Testing.*", "Microsoft.AspNetCore.Mvc.Testing", "Microsoft.Extensions.TimeProvider.Testing"]
+      everything-else:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
