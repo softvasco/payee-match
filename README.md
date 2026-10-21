@@ -40,6 +40,19 @@ sequenceDiagram
 | NMTC | No match | no |
 | NOAP | Check not possible | no |
 
+## What works so far
+
+The core library normalises names (accents, case, punctuation, titles and legal forms), scores strings with Jaro-Winkler and Damerau-Levenshtein, and compares names word by word. The token matcher pairs words in any order, lets an initial stand for a word, and charges less for a middle name only one side has than for a word that contradicts the other side:
+
+| Payer typed | Account holder | Token score |
+|---|---|---|
+| J. M. Silva | Joao Manuel Silva | 0.867 |
+| Joao Silva | Joao Manuel Silva | 0.870 |
+| Maria Silva | Joao Silva | 0.500 |
+| J. M. S. | Joao Manuel Silva | 0 (initials alone never match) |
+
+Every score comes with the word pairs behind it, so the decision engine can say why. Nothing is decided yet: the thresholds that turn a score into MTCH, CMTC or NMTC are the next step.
+
 ## Plan
 
 - Name normaliser: diacritics, case, punctuation, titles and legal forms per country.
