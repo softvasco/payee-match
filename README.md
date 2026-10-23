@@ -51,7 +51,26 @@ The core library normalises names (accents, case, punctuation, titles and legal 
 | Maria Silva | Joao Silva | 0.500 |
 | J. M. S. | Joao Manuel Silva | 0 (initials alone never match) |
 
-Every score comes with the word pairs behind it, so the decision engine can say why. Nothing is decided yet: the thresholds that turn a score into MTCH, CMTC or NMTC are the next step.
+`DecisionEngine` turns that into an outcome. A score of 0.95 or more is MTCH, 0.80 or more is CMTC, anything lower is NMTC, and each decision lists the reason codes that applied:
+
+| Payer typed | Account holder | Outcome | Reasons |
+|---|---|---|---|
+| DR. JOÃO SILVA | Joao Silva | MTCH | SameNameAfterNormalisation |
+| Silva Joao | Joao Silva | MTCH | WordOrderDiffers |
+| J. M. Silva | Joao Manuel Silva | CMTC | InitialUsed |
+| Joao Silva | Joao Manuel Silva | CMTC | WordsMissing |
+| Joao Santos | Joao Silva | NMTC | WordsDiffer |
+| J. M. S. | Joao Manuel Silva | NMTC | NoWordInCommon |
+
+The thresholds are the bank's call, not mine. A bank that wants every typo confirmed by the payer sets the match threshold to 1, and "Joao Silvva" becomes CMTC with `SpellingDiffers`:
+
+```csharp
+var engine = new DecisionEngine(new MatchThresholds(match: 1, closeMatch: 0.8));
+var decision = engine.Decide("Joao Silvva", "Joao Silva");
+// CloseMatch, [SpellingDiffers], decision.Outcome.ToEpcCode() == "CMTC"
+```
+
+Legal forms are ignored for now, so "Acme Lda" and "Acme SA" still match. Companies get stricter rules next.
 
 ## Plan
 
