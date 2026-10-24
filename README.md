@@ -70,7 +70,7 @@ var decision = engine.Decide("Joao Silvva", "Joao Silva");
 // CloseMatch, [SpellingDiffers], decision.Outcome.ToEpcCode() == "CMTC"
 ```
 
-Legal forms are ignored for now, so "Acme Lda" and "Acme SA" still match. Companies get stricter rules next.
+A legal form left out still matches, since payers often drop it. Two different ones are another matter: "Acme Lda" and "Acme SA" are usually two companies, so the best they get is CMTC with `LegalFormDiffers`.
 
 ## Plan
 

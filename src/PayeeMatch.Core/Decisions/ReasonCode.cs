@@ -26,4 +26,7 @@ public enum ReasonCode
 
     /// <summary>One of the names is empty once normalised.</summary>
     NameEmpty = 8,
+
+    /// <summary>Both names carry a legal form and they differ, such as Lda and SA.</summary>
+    LegalFormDiffers = 9,
 }
