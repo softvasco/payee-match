@@ -38,6 +38,13 @@ public sealed class DecisionEngine(MatchThresholds thresholds)
             reasons.Add(ReasonCode.LegalFormDiffers);
         }
 
+        // one letter apart is often a different brand, so the payer has to look at a company name
+        var isCompany = leftParty.HasLegalForm || rightParty.HasLegalForm;
+        if (isCompany && reasons.Contains(ReasonCode.SpellingDiffers))
+        {
+            score = Math.Min(score, Thresholds.CloseMatch);
+        }
+
         return new PayeeDecision(Thresholds.Classify(score), score, reasons);
     }
 

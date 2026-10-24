@@ -116,6 +116,27 @@ public class DecisionEngineTests
     }
 
     [Fact]
+    public void A_typo_in_a_company_name_is_at_best_a_close_match()
+    {
+        var decision = _engine.Decide("Padaria Centrall Lda", "Padaria Central Lda");
+
+        Assert.Equal(MatchOutcome.CloseMatch, decision.Outcome);
+        Assert.Equal([ReasonCode.SpellingDiffers], decision.Reasons);
+    }
+
+    [Fact]
+    public void A_legal_form_on_one_side_is_enough_to_treat_the_name_as_a_company()
+    {
+        Assert.Equal(MatchOutcome.CloseMatch, _engine.Decide("Padaria Centrall", "Padaria Central Lda").Outcome);
+    }
+
+    [Fact]
+    public void A_company_name_in_another_word_order_is_still_a_match()
+    {
+        Assert.Equal(MatchOutcome.Match, _engine.Decide("Central Padaria Lda", "Padaria Central Lda").Outcome);
+    }
+
+    [Fact]
     public void A_bank_that_wants_typos_confirmed_raises_the_match_threshold()
     {
         var strict = new DecisionEngine(new MatchThresholds(match: 1, closeMatch: 0.8));
