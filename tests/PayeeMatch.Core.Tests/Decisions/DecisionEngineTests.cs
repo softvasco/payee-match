@@ -61,6 +61,39 @@ public class DecisionEngineTests
         Assert.Equal([ReasonCode.NoWordInCommon], decision.Reasons);
     }
 
+    [Fact]
+    public void A_different_legal_form_is_at_best_a_close_match()
+    {
+        var decision = _engine.Decide("Padaria Central Lda", "Padaria Central, S.A.");
+
+        Assert.Equal(MatchOutcome.CloseMatch, decision.Outcome);
+        Assert.Equal([ReasonCode.SameNameAfterNormalisation, ReasonCode.LegalFormDiffers], decision.Reasons);
+    }
+
+    [Fact]
+    public void A_legal_form_left_out_still_makes_a_match()
+    {
+        var decision = _engine.Decide("Padaria Central", "Padaria Central Lda");
+
+        Assert.Equal(MatchOutcome.Match, decision.Outcome);
+        Assert.Equal([ReasonCode.SameNameAfterNormalisation], decision.Reasons);
+    }
+
+    [Fact]
+    public void Two_spellings_of_the_same_legal_form_are_a_match()
+    {
+        Assert.Equal(MatchOutcome.Match, _engine.Decide("Padaria Central Limitada", "PADARIA CENTRAL, LDA.").Outcome);
+    }
+
+    [Fact]
+    public void A_different_legal_form_never_lifts_a_weak_name_to_a_close_match()
+    {
+        var decision = _engine.Decide("Padaria Norte Lda", "Padaria Central SA");
+
+        Assert.Equal(MatchOutcome.NoMatch, decision.Outcome);
+        Assert.Contains(ReasonCode.LegalFormDiffers, decision.Reasons);
+    }
+
     [Theory]
     [InlineData("", "Joao Silva")]
     [InlineData("Joao Silva", "  ")]
@@ -80,6 +113,27 @@ public class DecisionEngineTests
 
         Assert.Contains(ReasonCode.SpellingDiffers, decision.Reasons);
         Assert.Equal(MatchOutcome.Match, decision.Outcome);
+    }
+
+    [Fact]
+    public void A_typo_in_a_company_name_is_at_best_a_close_match()
+    {
+        var decision = _engine.Decide("Padaria Centrall Lda", "Padaria Central Lda");
+
+        Assert.Equal(MatchOutcome.CloseMatch, decision.Outcome);
+        Assert.Equal([ReasonCode.SpellingDiffers], decision.Reasons);
+    }
+
+    [Fact]
+    public void A_legal_form_on_one_side_is_enough_to_treat_the_name_as_a_company()
+    {
+        Assert.Equal(MatchOutcome.CloseMatch, _engine.Decide("Padaria Centrall", "Padaria Central Lda").Outcome);
+    }
+
+    [Fact]
+    public void A_company_name_in_another_word_order_is_still_a_match()
+    {
+        Assert.Equal(MatchOutcome.Match, _engine.Decide("Central Padaria Lda", "Padaria Central Lda").Outcome);
     }
 
     [Fact]
