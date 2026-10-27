@@ -72,6 +72,13 @@ var decision = engine.Decide("Joao Silvva", "Joao Silva");
 
 A legal form left out still matches, since payers often drop it. Two different ones are another matter: "Acme Lda" and "Acme SA" are usually two companies, so the best they get is CMTC with `LegalFormDiffers`. A name with a legal form on either side is treated as a company, and a typo there is CMTC too: "Padaria Centrall Lda" against "Padaria Central Lda" could be another brand, so the payer should see the name.
 
+A joint account has more than one holder, and the payer usually types just one of them. The engine checks the name against each holder and answers with the closest, along with that holder's name, which is what a CMTC response shows the payer. On a tie the first holder on record wins:
+
+```csharp
+var result = engine.Decide("Maria Costa", ["Maria Santos", "Maria Fernanda Costa"]);
+// result.Holder == "Maria Fernanda Costa", CloseMatch, [WordsMissing]
+```
+
 ## Plan
 
 - Name normaliser: diacritics, case, punctuation, titles and legal forms per country.
