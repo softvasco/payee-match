@@ -48,6 +48,19 @@ public sealed class DecisionEngine(MatchThresholds thresholds)
         return new PayeeDecision(Thresholds.Classify(score), score, reasons);
     }
 
+    /// <summary>Checks the name against every holder of a joint account and answers with the closest one.</summary>
+    public HolderDecision Decide(string provided, IEnumerable<string> holders)
+    {
+        ArgumentNullException.ThrowIfNull(provided);
+        ArgumentNullException.ThrowIfNull(holders);
+
+        // on a tie the first holder wins, so the order on record decides and not chance
+        return holders
+            .Select(holder => new HolderDecision(holder, Decide(provided, holder)))
+            .MaxBy(d => d.Decision.Score)
+            ?? throw new ArgumentException("An account has at least one holder.", nameof(holders));
+    }
+
     private static (double Score, List<ReasonCode> Reasons) Score(NormalisedName left, NormalisedName right)
     {
         var match = TokenMatcher.Match(left, right);

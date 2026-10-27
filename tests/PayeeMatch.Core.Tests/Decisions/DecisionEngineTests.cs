@@ -145,6 +145,45 @@ public class DecisionEngineTests
         Assert.Equal(MatchOutcome.Match, strict.Decide("Silva Joao", "Joao Silva").Outcome);
     }
 
+    [Fact]
+    public void Any_holder_of_a_joint_account_can_be_named()
+    {
+        var result = _engine.Decide("Maria Costa", ["Joao Silva", "Maria Costa"]);
+
+        Assert.Equal("Maria Costa", result.Holder);
+        Assert.Equal(MatchOutcome.Match, result.Decision.Outcome);
+    }
+
+    [Fact]
+    public void A_joint_account_answers_with_the_closest_holder()
+    {
+        var result = _engine.Decide("Maria Costa", ["Maria Santos", "Maria Fernanda Costa"]);
+
+        Assert.Equal("Maria Fernanda Costa", result.Holder);
+        Assert.Equal(MatchOutcome.CloseMatch, result.Decision.Outcome);
+        Assert.Equal([ReasonCode.WordsMissing], result.Decision.Reasons);
+    }
+
+    [Fact]
+    public void A_name_that_fits_no_holder_is_no_match()
+    {
+        var result = _engine.Decide("Pedro Alves", ["Joao Silva", "Maria Costa"]);
+
+        Assert.Equal(MatchOutcome.NoMatch, result.Decision.Outcome);
+    }
+
+    [Fact]
+    public void On_a_tie_the_first_holder_on_record_wins()
+    {
+        var result = _engine.Decide("Silva", ["Joao Silva", "Ana Silva"]);
+
+        Assert.Equal("Joao Silva", result.Holder);
+    }
+
+    [Fact]
+    public void An_account_needs_at_least_one_holder() =>
+        Assert.Throws<ArgumentException>(() => _engine.Decide("Joao Silva", Array.Empty<string>()));
+
     [Theory]
     [InlineData(0.9, 0.9)]
     [InlineData(0.8, 0.9)]
