@@ -79,6 +79,13 @@ var result = engine.Decide("Maria Costa", ["Maria Santos", "Maria Fernanda Costa
 // result.Holder == "Maria Fernanda Costa", CloseMatch, [WordsMissing]
 ```
 
+A company can be identified by its LEI instead of its name. `Lei` checks the ISO 17442 check digits (MOD 97-10, the same sum as an IBAN), and `IdentificationCheck` compares the code sent with the one on record for the account. A code is the holder's or it isn't, so there is no CMTC here: the same LEI is MTCH, another one is NMTC, and an account with no LEI on record is NOAP:
+
+```csharp
+var decision = IdentificationCheck.Decide(Lei.Parse("5493001KJTIIGC8Y1R12"), onRecord: null);
+// NotApplicable, [IdentifierNotOnRecord], decision.Outcome.ToEpcCode() == "NOAP"
+```
+
 ## Plan
 
 - Name normaliser: diacritics, case, punctuation, titles and legal forms per country.
