@@ -29,4 +29,13 @@ public enum ReasonCode
 
     /// <summary>Both names carry a legal form and they differ, such as Lda and SA.</summary>
     LegalFormDiffers = 9,
+
+    /// <summary>The identification code sent is the one on record.</summary>
+    IdentifierMatches = 10,
+
+    /// <summary>The account holder has another identification code on record.</summary>
+    IdentifierDiffers = 11,
+
+    /// <summary>No identification code of that kind is on record for the account.</summary>
+    IdentifierNotOnRecord = 12,
 }

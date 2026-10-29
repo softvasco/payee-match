@@ -11,6 +11,9 @@ public enum MatchOutcome
 
     /// <summary>NMTC: the name does not belong to the account holder.</summary>
     NoMatch,
+
+    /// <summary>NOAP: the check can't be done for this account.</summary>
+    NotApplicable,
 }
 
 public static class MatchOutcomeCodes
@@ -20,6 +23,7 @@ public static class MatchOutcomeCodes
         MatchOutcome.Match => "MTCH",
         MatchOutcome.CloseMatch => "CMTC",
         MatchOutcome.NoMatch => "NMTC",
+        MatchOutcome.NotApplicable => "NOAP",
         _ => throw new ArgumentOutOfRangeException(nameof(outcome), outcome, null),
     };
 }
