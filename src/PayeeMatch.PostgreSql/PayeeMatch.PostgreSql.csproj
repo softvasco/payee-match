@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>PayeeMatch.PostgreSql</PackageId>
+    <Description>PostgreSQL account directory for PayeeMatch.</Description>
+    <PackageTags>verification-of-payee;vop;postgresql;npgsql</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PayeeMatch.Core\PayeeMatch.Core.csproj" />
+  </ItemGroup>
+</Project>

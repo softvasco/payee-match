@@ -2,9 +2,11 @@
   <Folder Name="/src/">
     <Project Path="src/PayeeMatch.Api/PayeeMatch.Api.csproj" />
     <Project Path="src/PayeeMatch.Core/PayeeMatch.Core.csproj" />
+    <Project Path="src/PayeeMatch.PostgreSql/PayeeMatch.PostgreSql.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PayeeMatch.Api.Tests/PayeeMatch.Api.Tests.csproj" />
     <Project Path="tests/PayeeMatch.Core.Tests/PayeeMatch.Core.Tests.csproj" />
+    <Project Path="tests/PayeeMatch.PostgreSql.Tests/PayeeMatch.PostgreSql.Tests.csproj" />
   </Folder>
 </Solution>

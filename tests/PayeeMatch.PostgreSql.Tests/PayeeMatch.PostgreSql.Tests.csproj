@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Testcontainers.PostgreSql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PayeeMatch.PostgreSql\PayeeMatch.PostgreSql.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\PayeeMatch.Core.Tests\Accounts\AccountDirectoryContract.cs" Link="AccountDirectoryContract.cs" />
+  </ItemGroup>
+</Project>
