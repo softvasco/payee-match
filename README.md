@@ -86,6 +86,8 @@ var decision = IdentificationCheck.Decide(Lei.Parse("5493001KJTIIGC8Y1R12"), onR
 // NotApplicable, [IdentifierNotOnRecord], decision.Outcome.ToEpcCode() == "NOAP"
 ```
 
+The names and LEI on record come from `IAccountDirectory`, the one port a bank has to plug its own systems into. It looks an IBAN up in electronic form (no spaces, upper case), returns the holders in the order on record, since that order breaks ties, and returns null for an IBAN the bank doesn't hold, which the endpoint will answer with NOAP. `InMemoryAccountDirectory` is for tests and demos. `PayeeMatch.PostgreSql` reads two tables, `accounts` and `account_holders`, whose DDL is in `PostgreSqlAccountDirectory.Schema`; an account row with no holders reads as no account, because there is no name to check against. Both run the same contract tests, the PostgreSQL one against a real server through Testcontainers.
+
 ## Plan
 
 - Name normaliser: diacritics, case, punctuation, titles and legal forms per country.
@@ -102,7 +104,7 @@ dotnet build
 dotnet test
 ```
 
-Needs the .NET 10 SDK.
+Needs the .NET 10 SDK, and Docker for the PostgreSQL tests.
 
 ## License
 
