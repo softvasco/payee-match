@@ -23,7 +23,7 @@ public sealed record Lei
             || !candidate.All(char.IsAsciiLetterOrDigit)
             || !char.IsAsciiDigit(candidate[^1])
             || !char.IsAsciiDigit(candidate[^2])
-            || !HasValidCheckDigits(candidate))
+            || !Mod97.IsValid(candidate))
         {
             return false;
         }
@@ -33,18 +33,4 @@ public sealed record Lei
     }
 
     public override string ToString() => Value;
-
-    // ISO 7064 MOD 97-10, as in IBANs: letters become 10 to 35 and the whole number leaves 1 mod 97
-    private static bool HasValidCheckDigits(string lei)
-    {
-        var remainder = 0;
-        foreach (var c in lei)
-        {
-            remainder = char.IsAsciiDigit(c)
-                ? ((remainder * 10) + (c - '0')) % 97
-                : ((remainder * 100) + (c - 'A' + 10)) % 97;
-        }
-
-        return remainder == 1;
-    }
 }
