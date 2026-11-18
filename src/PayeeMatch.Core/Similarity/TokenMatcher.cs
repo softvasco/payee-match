@@ -8,6 +8,9 @@ public enum TokenPairKind
     Exact,
     Similar,
     Initial,
+
+    /// <summary>Same length and the same letters, apart from ? standing in for letters the scheme couldn't carry.</summary>
+    Placeholder,
 }
 
 public sealed record TokenPair(string Left, string Right, TokenPairKind Kind, double Score);
@@ -29,6 +32,8 @@ public static class TokenMatcher
     private const double SimilarTokenThreshold = 0.85;
 
     private const double InitialScore = 0.8;
+
+    private const double UnknownLetterPenalty = 0.05;
 
     // a middle name only one side has costs less than a word that contradicts the other side
     private const double MissingTokenWeight = 0.3;
@@ -80,11 +85,48 @@ public static class TokenMatcher
             return new TokenPair(left, right, TokenPairKind.Initial, InitialScore);
         }
 
+        if (IsPlaceholderPair(left, right, out var unknowns))
+        {
+            return new TokenPair(left, right, TokenPairKind.Placeholder, PlaceholderScore(left, right, unknowns));
+        }
+
         var similarity = JaroWinkler.Similarity(left, right);
         return similarity >= SimilarTokenThreshold && left.Length > 1 && right.Length > 1
             ? new TokenPair(left, right, TokenPairKind.Similar, similarity)
             : null;
     }
+
+    private static bool IsPlaceholderPair(string left, string right, out int unknowns)
+    {
+        unknowns = 0;
+        if (left.Length != right.Length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < left.Length; i++)
+        {
+            if (left[i] == NameNormaliser.UnknownLetter || right[i] == NameNormaliser.UnknownLetter)
+            {
+                unknowns++;
+            }
+            else if (left[i] != right[i])
+            {
+                return false;
+            }
+        }
+
+        return unknowns > 0;
+    }
+
+    // a ? at the end of a long word shouldn't cost more than a dropped letter would
+    private static double PlaceholderScore(string left, string right, int unknowns)
+    {
+        var dropped = JaroWinkler.Similarity(WithoutUnknowns(left), WithoutUnknowns(right));
+        return Math.Max(1 - (UnknownLetterPenalty * unknowns), dropped);
+    }
+
+    private static string WithoutUnknowns(string token) => token.Replace(NameNormaliser.UnknownLetter.ToString(), string.Empty, StringComparison.Ordinal);
 
     private static bool IsInitialOf(string initial, string word) =>
         initial.Length == 1 && word.Length > 1 && word[0] == initial[0];

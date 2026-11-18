@@ -34,6 +34,34 @@ public class TokenMatcherProperties
         Prop.ForAll(Name, name =>
             !name.Any(w => w.Length > 1) || Math.Abs(Score(name, name) - 1) < Tolerance);
 
+    [Property(MaxTest = 1000)]
+    public Property An_unknown_letter_scores_at_least_what_splitting_on_it_did() =>
+        Prop.ForAll(Name, Gen.Choose(0, 1000).ToArbitrary(), (name, seed) =>
+        {
+            var (unknown, split) = ReplaceOneLetter(name, seed);
+            return Score(unknown, name) >= Score(split, name) - Tolerance;
+        });
+
+    [Property(MaxTest = 1000)]
+    public Property An_unknown_letter_never_scores_above_the_exact_word() =>
+        Prop.ForAll(Name, Gen.Choose(0, 1000).ToArbitrary(), (name, seed) =>
+        {
+            var (unknown, _) = ReplaceOneLetter(name, seed);
+            return Score(unknown, name) <= Score(name, name) + Tolerance;
+        });
+
+    // the same letter of the same word replaced by ? and, the old way, by a space
+    private static (string[] Unknown, string[] Split) ReplaceOneLetter(string[] name, int seed)
+    {
+        var word = seed % name.Length;
+        var letter = seed % name[word].Length;
+
+        string[] With(char c) =>
+            [.. name.Select((w, i) => i == word ? string.Concat(w.AsSpan(0, letter), c.ToString(), w.AsSpan(letter + 1)) : w)];
+
+        return (With('?'), With(' '));
+    }
+
     private static double Score(string[] left, string[] right) =>
         TokenMatcher.Match(NameNormaliser.Normalise(string.Join(' ', left)), NameNormaliser.Normalise(string.Join(' ', right))).Score;
 }

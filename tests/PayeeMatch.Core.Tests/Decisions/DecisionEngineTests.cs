@@ -198,4 +198,31 @@ public class DecisionEngineTests
     [InlineData(MatchOutcome.NoMatch, "NMTC")]
     public void Outcomes_map_to_the_epc_codes(MatchOutcome outcome, string code) =>
         Assert.Equal(code, outcome.ToEpcCode());
+
+    [Fact]
+    public void A_letter_the_scheme_could_not_carry_still_makes_a_match()
+    {
+        var decision = _engine.Decide("Jo?o Silva", "João Silva");
+
+        Assert.Equal(MatchOutcome.Match, decision.Outcome);
+        Assert.Equal([ReasonCode.UnknownLetter], decision.Reasons);
+    }
+
+    [Fact]
+    public void Several_unknown_letters_in_long_words_still_make_a_match()
+    {
+        var decision = _engine.Decide("Jo?o Concei??o", "João Conceição");
+
+        Assert.Equal(MatchOutcome.Match, decision.Outcome);
+        Assert.Equal([ReasonCode.UnknownLetter], decision.Reasons);
+    }
+
+    [Fact]
+    public void An_unknown_letter_in_a_company_name_is_not_treated_as_a_typo()
+    {
+        var decision = _engine.Decide("Padaria S?o Jorge Lda", "Padaria São Jorge Lda");
+
+        Assert.Equal(MatchOutcome.Match, decision.Outcome);
+        Assert.DoesNotContain(ReasonCode.SpellingDiffers, decision.Reasons);
+    }
 }

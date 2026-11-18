@@ -91,6 +91,49 @@ public class TokenMatcherTests
         Assert.Equal(0, Match("", "Joao Silva").Score);
     }
 
+    [Fact]
+    public void A_question_mark_stands_for_one_letter_of_the_other_word()
+    {
+        var match = Match("Jo?o Silva", "Joao Silva");
+
+        Assert.Contains(match.Pairs, p => p is { Left: "jo?o", Right: "joao", Kind: TokenPairKind.Placeholder });
+        Assert.Equal((0.95 + 1) / 2, match.Score, Precision);
+    }
+
+    [Fact]
+    public void Each_unknown_letter_costs_a_little()
+    {
+        var pair = Assert.Single(Match("?n?", "Ana").Pairs);
+
+        Assert.Equal(TokenPairKind.Placeholder, pair.Kind);
+        Assert.Equal(0.9, pair.Score, Precision);
+    }
+
+    [Fact]
+    public void An_unknown_letter_in_a_long_word_costs_no_more_than_a_missing_one()
+    {
+        var pair = Assert.Single(Match("Silvi?", "Silvia").Pairs);
+
+        Assert.Equal(TokenPairKind.Placeholder, pair.Kind);
+        Assert.Equal(JaroWinkler.Similarity("silvi", "silvia"), pair.Score, Precision);
+    }
+
+    [Fact]
+    public void Known_letters_still_have_to_agree()
+    {
+        var match = Match("Jo?e", "Joao");
+
+        Assert.DoesNotContain(match.Pairs, p => p.Kind == TokenPairKind.Placeholder);
+    }
+
+    [Fact]
+    public void Words_of_different_lengths_fall_back_to_spelling_similarity()
+    {
+        var pair = Assert.Single(Match("Stra?e", "Strasse").Pairs);
+
+        Assert.Equal(TokenPairKind.Similar, pair.Kind);
+    }
+
     private static TokenMatch Match(string left, string right) =>
         TokenMatcher.Match(NameNormaliser.Normalise(left), NameNormaliser.Normalise(right));
 }

@@ -62,6 +62,12 @@ The core library normalises names (accents, case, punctuation, titles and legal 
 | Joao Santos | Joao Silva | NMTC | WordsDiffer |
 | J. M. S. | Joao Manuel Silva | NMTC | NoWordInCommon |
 
+Some PSPs send `?` for any letter outside the SEPA character set, so "João" arrives as "Jo?o". A `?` inside a word stands for one letter of the other name instead of splitting the word, and the decision says so ([ADR 0003](docs/adr/0003-question-mark-as-an-unknown-letter.md)):
+
+| Payer typed | Account holder | Outcome | Reasons |
+|---|---|---|---|
+| Jo?o Silva | João Silva | MTCH | UnknownLetter |
+
 The thresholds are the bank's call, not mine. A bank that wants every typo confirmed by the payer sets the match threshold to 1, and "Joao Silvva" becomes CMTC with `SpellingDiffers`:
 
 ```csharp
