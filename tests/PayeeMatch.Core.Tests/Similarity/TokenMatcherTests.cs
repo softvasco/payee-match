@@ -103,10 +103,19 @@ public class TokenMatcherTests
     [Fact]
     public void Each_unknown_letter_costs_a_little()
     {
-        var pair = Assert.Single(Match("Concei??o", "Conceicao").Pairs);
+        var pair = Assert.Single(Match("?n?", "Ana").Pairs);
 
         Assert.Equal(TokenPairKind.Placeholder, pair.Kind);
         Assert.Equal(0.9, pair.Score, Precision);
+    }
+
+    [Fact]
+    public void An_unknown_letter_in_a_long_word_costs_no_more_than_a_missing_one()
+    {
+        var pair = Assert.Single(Match("Silvi?", "Silvia").Pairs);
+
+        Assert.Equal(TokenPairKind.Placeholder, pair.Kind);
+        Assert.Equal(JaroWinkler.Similarity("silvi", "silvia"), pair.Score, Precision);
     }
 
     [Fact]

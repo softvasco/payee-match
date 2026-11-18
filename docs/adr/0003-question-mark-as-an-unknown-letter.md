@@ -24,6 +24,7 @@ Option 3.
 
 - The normaliser keeps `?` as part of a word when it sits next to a letter or digit of that word. A `?` on its own ("Silva ?") still separates words and leaves nothing behind.
 - When two tokens have the same length and agree on every position where neither has a `?`, they pair as a new kind, `Placeholder`. Each `?` costs 0.05 off a pair score of 1, so "Jo?o Silva" against "João Silva" scores 0.975 and stays a match with the default thresholds, while a word that is all `?` is worth little.
+- The pair never scores below Jaro-Winkler on the two words with the `?` dropped. Without that, "Silvi?" scored 0.95 against "Silvia" while splitting it into "silvi" scored 0.967: a missing last letter in a long word costs almost nothing in Jaro-Winkler, and a known unknown shouldn't cost more. "Jo?o Concei??o" against "João Conceição" is a match because of it.
 - A placeholder pair adds the reason code `UnknownLetter`, not `SpellingDiffers`, so a company name with one isn't capped at close match the way a typo is.
 - Tokens of different lengths fall back to Jaro-Winkler with `?` as an ordinary character. That covers the rare case where one replaced letter stood for two after folding ("Stra?e" against "strasse").
 

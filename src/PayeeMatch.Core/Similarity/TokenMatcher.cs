@@ -87,7 +87,7 @@ public static class TokenMatcher
 
         if (IsPlaceholderPair(left, right, out var unknowns))
         {
-            return new TokenPair(left, right, TokenPairKind.Placeholder, Math.Max(0, 1 - (UnknownLetterPenalty * unknowns)));
+            return new TokenPair(left, right, TokenPairKind.Placeholder, PlaceholderScore(left, right, unknowns));
         }
 
         var similarity = JaroWinkler.Similarity(left, right);
@@ -118,6 +118,15 @@ public static class TokenMatcher
 
         return unknowns > 0;
     }
+
+    // a ? at the end of a long word shouldn't cost more than a dropped letter would
+    private static double PlaceholderScore(string left, string right, int unknowns)
+    {
+        var dropped = JaroWinkler.Similarity(WithoutUnknowns(left), WithoutUnknowns(right));
+        return Math.Max(1 - (UnknownLetterPenalty * unknowns), dropped);
+    }
+
+    private static string WithoutUnknowns(string token) => token.Replace(NameNormaliser.UnknownLetter.ToString(), string.Empty, StringComparison.Ordinal);
 
     private static bool IsInitialOf(string initial, string word) =>
         initial.Length == 1 && word.Length > 1 && word[0] == initial[0];

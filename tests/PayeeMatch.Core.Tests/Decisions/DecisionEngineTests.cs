@@ -209,11 +209,11 @@ public class DecisionEngineTests
     }
 
     [Fact]
-    public void Several_unknown_letters_make_a_close_match()
+    public void Several_unknown_letters_in_long_words_still_make_a_match()
     {
         var decision = _engine.Decide("Jo?o Concei??o", "João Conceição");
 
-        Assert.Equal(MatchOutcome.CloseMatch, decision.Outcome);
+        Assert.Equal(MatchOutcome.Match, decision.Outcome);
         Assert.Equal([ReasonCode.UnknownLetter], decision.Reasons);
     }
 
