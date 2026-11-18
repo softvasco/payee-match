@@ -43,6 +43,25 @@ public class NameNormaliserTests
         Assert.Equal(expected, NameNormaliser.Normalise(input).Value);
     }
 
+    [Theory]
+    [InlineData("Jo?o Concei??o", "jo?o concei??o")]
+    [InlineData("?ster", "?ster")]
+    [InlineData("M?ller-Lüdenscheidt", "m?ller ludenscheidt")]
+    [InlineData("Stra?e", "stra?e")]
+    public void Keeps_a_question_mark_inside_a_word_as_an_unknown_letter(string input, string expected)
+    {
+        Assert.Equal(expected, NameNormaliser.Normalise(input).Value);
+    }
+
+    [Theory]
+    [InlineData("Silva ?", "silva")]
+    [InlineData("Ana ? Silva", "ana silva")]
+    [InlineData("??", "")]
+    public void A_question_mark_on_its_own_still_separates_words(string input, string expected)
+    {
+        Assert.Equal(expected, NameNormaliser.Normalise(input).Value);
+    }
+
     [Fact]
     public void Full_width_and_ligature_forms_become_plain_letters()
     {

@@ -8,7 +8,7 @@ namespace PayeeMatch.Core.Tests.Names;
 public class NameNormaliserProperties
 {
     // random unicode rarely hits the cases that matter, so also build names from the letters banks actually see
-    private const string NameLike = "aeiouAEIOU ãáàâçéêíóõôúüñÃÁÇÉÓÜÑßøØłŁæÆœþ'’`.-,&  ";
+    private const string NameLike = "aeiouAEIOU ãáàâçéêíóõôúüñÃÁÇÉÓÜÑßøØłŁæÆœþ'’`.-,&?  ";
 
     private static readonly Arbitrary<string> NameLikeStrings =
         Gen.Elements(NameLike.ToCharArray()).ArrayOf().Select(chars => new string(chars)).ToArbitrary();
