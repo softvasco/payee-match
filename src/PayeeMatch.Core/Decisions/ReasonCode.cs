@@ -38,4 +38,7 @@ public enum ReasonCode
 
     /// <summary>No identification code of that kind is on record for the account.</summary>
     IdentifierNotOnRecord = 12,
+
+    /// <summary>A ? in the name stands for a letter the payer's bank couldn't send.</summary>
+    UnknownLetter = 13,
 }

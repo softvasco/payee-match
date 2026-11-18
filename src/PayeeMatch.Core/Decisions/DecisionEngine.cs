@@ -85,6 +85,12 @@ public sealed class DecisionEngine(MatchThresholds thresholds)
             reasons.Add(ReasonCode.SpellingDiffers);
         }
 
+        // not a typo: the payer typed the letter and their bank dropped it
+        if (match.Pairs.Any(p => p.Kind == TokenPairKind.Placeholder))
+        {
+            reasons.Add(ReasonCode.UnknownLetter);
+        }
+
         var (left, right) = (match.UnpairedLeft.Count, match.UnpairedRight.Count);
         if (left > 0 && right > 0)
         {
