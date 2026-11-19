@@ -5,7 +5,7 @@
 
 Verification of Payee name matching for .NET, following the EPC VOP scheme. You give it the name the payer typed and the account holder names behind an IBAN. It answers match, close match or no match, and tells you why.
 
-Work in progress. The matching core comes first, then the EPC responder API.
+Work in progress. The matching core and the EPC endpoint work; validation errors, the evaluation set and benchmarks are next.
 
 ## Why
 
@@ -94,13 +94,34 @@ var decision = IdentificationCheck.Decide(Lei.Parse("5493001KJTIIGC8Y1R12"), onR
 
 The names and LEI on record come from `IAccountDirectory`, the one port a bank has to plug its own systems into. It looks an IBAN up in electronic form (no spaces, upper case), returns the holders in the order on record, since that order breaks ties, and returns null for an IBAN the bank doesn't hold, which the endpoint will answer with NOAP. `InMemoryAccountDirectory` is for tests and demos. `PayeeMatch.PostgreSql` reads two tables, `accounts` and `account_holders`, whose DDL is in `PostgreSqlAccountDirectory.Schema`; an account row with no holders reads as no account, because there is no name to check against. Both run the same contract tests, the PostgreSQL one against a real server through Testcontainers.
 
+`PayeeMatch.Api` answers the responding side of the EPC call, `POST /vop/v1/payee-verifications`, with the request and response bodies of the EPC VOP API specification (EPC103-24 v1.1.1):
+
+```http
+POST /vop/v1/payee-verifications
+X-Request-ID: 123e4567-e89b-12d3-a456-426614174000
+X-Request-Timestamp: 2026-11-19T20:15:30.1Z
+
+{ "party": { "name": "Maria Costa" },
+  "partyAccount": { "iban": "NL91ABNA0417164300" },
+  "partyAgent": { "financialInstitutionId": { "bicfi": "ABNANL2AXXX" } },
+  "requestingAgent": { "financialInstitutionId": { "bicfi": "EFGHPTPLXXX" } } }
+
+200 OK
+X-Request-ID: 123e4567-e89b-12d3-a456-426614174000
+X-Response-Timestamp: 2026-11-19T20:15:30.412Z
+
+{ "partyNameMatch": "CMTC", "matchedName": "Maria Fernanda Costa" }
+```
+
+A name gets `partyNameMatch`, an LEI gets `partyIdMatch`, and `matchedName` only comes back on a close match, so a payer can't learn the holder's name by sending a wrong one. The request id goes back as sent. The spec wants timestamps with no trailing zeros in the milliseconds (`.46Z`, not `.460Z`), which is what the `FFF` format specifier does. For now a malformed request gets a bare 400; the ProblemDetails body with the spec's message codes comes next.
+
 ## Plan
 
 - Name normaliser: diacritics, case, punctuation, titles and legal forms per country.
 - Similarity: Jaro-Winkler and Damerau-Levenshtein, plus token rules for word order, initials and missing middle names.
 - Decision engine with configurable thresholds and a reason code on every outcome.
 - Different rules for people and companies, joint accounts, and LEI checks for the identification code flow.
-- ASP.NET Core responder for the EPC endpoint, with an in-memory and a PostgreSQL account directory.
+- ASP.NET Core responder for the EPC endpoint (in), with validation and ProblemDetails errors next.
 - A public synthetic evaluation set with precision and recall, and benchmarks.
 
 ## Build
