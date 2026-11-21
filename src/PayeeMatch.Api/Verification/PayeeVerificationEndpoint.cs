@@ -39,10 +39,13 @@ public static class PayeeVerificationEndpoint
         // the requester matches our answer to its call by this id, so it goes back exactly as sent
         headers[RequestIdHeader] = requestId;
 
-        if (request.PartyAccount?.Iban is not { } iban || request.Party is not { } party)
+        // a malformed IBAN is the requester's mistake, not an account we don't hold, so it gets a 400 rather than NOAP
+        if (!Iban.TryParse(request.PartyAccount?.Iban, out var parsed) || request.Party is not { } party)
         {
             return Results.BadRequest();
         }
+
+        var iban = parsed.Value;
 
         // name + IBAN or code + IBAN; the spec treats both together as a format error
         var hasCode = party.Identification is not null;
