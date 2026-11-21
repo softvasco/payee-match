@@ -119,6 +119,25 @@ public sealed class PayeeVerificationTests : IClassFixture<WebApplicationFactory
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("DE88370400440532013000")]
+    [InlineData("DE8937040044053201300")]
+    [InlineData("US89370400440532013000")]
+    public async Task A_malformed_iban_is_rejected_instead_of_answered_as_not_applicable(string iban)
+    {
+        using var response = await VerifyAsync(NameRequest("Joao Manuel Silva", iban));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task An_iban_typed_with_spaces_and_lower_case_is_found()
+    {
+        using var response = await VerifyAsync(NameRequest("Joao Manuel Silva", "de89 3704 0044 0532 0130 00"));
+
+        Assert.Equal("""{"partyNameMatch":"MTCH"}""", await response.Content.ReadAsStringAsync(Token));
+    }
+
     public void Dispose() => _client.Dispose();
 
     private static JsonObject NameRequest(string name, string iban) => Request(new JsonObject { ["name"] = name }, iban);
