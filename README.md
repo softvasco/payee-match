@@ -113,7 +113,7 @@ X-Response-Timestamp: 2026-11-19T20:15:30.412Z
 { "partyNameMatch": "CMTC", "matchedName": "Maria Fernanda Costa" }
 ```
 
-A name gets `partyNameMatch`, an LEI gets `partyIdMatch`, and `matchedName` only comes back on a close match, so a payer can't learn the holder's name by sending a wrong one. The request id goes back as sent. The spec wants timestamps with no trailing zeros in the milliseconds (`.46Z`, not `.460Z`), which is what the `FFF` format specifier does. For now a malformed request gets a bare 400; the ProblemDetails body with the spec's message codes comes next.
+A name gets `partyNameMatch`, an LEI gets `partyIdMatch`, and `matchedName` only comes back on a close match, so a payer can't learn the holder's name by sending a wrong one. The request id goes back as sent. The spec wants timestamps with no trailing zeros in the milliseconds (`.46Z`, not `.460Z`), which is what the `FFF` format specifier does. A malformed request gets a 400 with a ProblemDetails body that names the field: a missing or non-UUID request id, an IBAN or BIC that fails its format or check digits, a name and an LEI together, or an organisation id other than an LEI. An IBAN that is well formed but not held here is still a 200 with NOAP. The spec's own error codes aren't mapped yet.
 
 ## Plan
 
@@ -121,7 +121,7 @@ A name gets `partyNameMatch`, an LEI gets `partyIdMatch`, and `matchedName` only
 - Similarity: Jaro-Winkler and Damerau-Levenshtein, plus token rules for word order, initials and missing middle names.
 - Decision engine with configurable thresholds and a reason code on every outcome.
 - Different rules for people and companies, joint accounts, and LEI checks for the identification code flow.
-- ASP.NET Core responder for the EPC endpoint (in), with validation and ProblemDetails errors next.
+- ASP.NET Core responder for the EPC endpoint, with validation and ProblemDetails errors (in), and a latency budget with traces and metrics next.
 - A public synthetic evaluation set with precision and recall, and benchmarks.
 
 ## Build
