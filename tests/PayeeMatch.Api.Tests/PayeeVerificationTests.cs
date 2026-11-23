@@ -138,7 +138,66 @@ public sealed class PayeeVerificationTests : IClassFixture<WebApplicationFactory
         Assert.Equal("""{"partyNameMatch":"MTCH"}""", await response.Content.ReadAsStringAsync(Token));
     }
 
+    [Theory]
+    [InlineData("iban", "partyAccount.iban is not a valid IBAN.")]
+    [InlineData("party-bic", "partyAgent.financialInstitutionId.bicfi is not a valid BIC.")]
+    [InlineData("requesting-bic", "requestingAgent.financialInstitutionId.bicfi is not a valid BIC.")]
+    [InlineData("name-and-lei", "party has both a name and an identification; send one of them.")]
+    [InlineData("no-lei", "party needs a name or an organisation LEI; other identification schemes aren't supported.")]
+    [InlineData("bad-lei", "party.identification.organisationId.lei is not a valid LEI.")]
+    [InlineData("no-party", "party is required.")]
+    public async Task A_rejected_request_says_what_is_wrong_as_problem_details(string fault, string detail)
+    {
+        var request = LeiRequest(CompanyLei, CompanyIban);
+        switch (fault)
+        {
+            case "iban": request["partyAccount"]!["iban"] = "GB82WEST12345698765431"; break;
+            case "party-bic": request["partyAgent"]!["financialInstitutionId"]!["bicfi"] = "ABCD12FFXXX"; break;
+            case "requesting-bic": request["requestingAgent"]!["financialInstitutionId"]!["bicfi"] = "EFGHPT"; break;
+            case "name-and-lei": request["party"]!["name"] = "Padaria Central Lda"; break;
+            case "no-lei": request["party"]!["identification"]!["organisationId"] = new JsonObject { ["other"] = "PT509876543" }; break;
+            case "bad-lei": request["party"]!["identification"]!["organisationId"]!["lei"] = "5493001KJTIIGC8Y1R13"; break;
+            case "no-party": request.Remove("party"); break;
+        }
+
+        using var response = await VerifyAsync(request);
+
+        await AssertProblemAsync(response, detail);
+    }
+
+    [Fact]
+    public async Task A_missing_request_id_is_a_problem_details_response_too()
+    {
+        using var response = await VerifyAsync(NameRequest("Joao Manuel Silva", PersonIban), requestId: null);
+
+        await AssertProblemAsync(response, "X-Request-ID must be a UUID.");
+    }
+
+    [Fact]
+    public async Task A_body_that_is_not_json_gets_problem_details()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(PayeeVerificationEndpoint.Route, UriKind.Relative))
+        {
+            Content = new StringContent("{ not json", System.Text.Encoding.UTF8, "application/json"),
+        };
+        request.Headers.Add(PayeeVerificationEndpoint.RequestIdHeader, "4f0b8c2e-6f1d-4a57-9f3e-1c2d3e4f5a6b");
+
+        using var response = await _client.SendAsync(request, Token);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
     public void Dispose() => _client.Dispose();
+
+    private static async Task AssertProblemAsync(HttpResponseMessage response, string detail)
+    {
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var body = await BodyAsync(response);
+        Assert.Equal(400, (int?)body["status"]);
+        Assert.Equal(detail, (string?)body["detail"]);
+    }
 
     private static JsonObject NameRequest(string name, string iban) => Request(new JsonObject { ["name"] = name }, iban);
 

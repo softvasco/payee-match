@@ -6,6 +6,7 @@ using PayeeMatch.Decisions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHealthChecks();
+builder.Services.AddProblemDetails();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton(new DecisionEngine());
 
@@ -13,6 +14,9 @@ builder.Services.AddSingleton(new DecisionEngine());
 builder.Services.TryAddSingleton<IAccountDirectory>(new InMemoryAccountDirectory([]));
 
 var app = builder.Build();
+
+// a body that isn't JSON fails before the endpoint runs; this gives it a ProblemDetails body too
+app.UseStatusCodePages();
 
 app.MapHealthChecks("/health");
 app.MapPayeeVerification();
