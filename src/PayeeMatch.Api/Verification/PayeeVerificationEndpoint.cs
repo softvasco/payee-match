@@ -33,16 +33,26 @@ public static class PayeeVerificationEndpoint
         string? requestId = context.Request.Headers[RequestIdHeader];
         if (!Guid.TryParse(requestId, out _))
         {
-            return Results.BadRequest();
+            return Invalid($"{RequestIdHeader} must be a UUID.");
         }
 
         // the requester matches our answer to its call by this id, so it goes back exactly as sent
         headers[RequestIdHeader] = requestId;
 
-        // a malformed IBAN is the requester's mistake, not an account we don't hold, so it gets a 400 rather than NOAP
-        if (!Iban.TryParse(request.PartyAccount?.Iban, out var parsed) || request.Party is not { } party)
+        if (request.Party is not { } party)
         {
-            return Results.BadRequest();
+            return Invalid("party is required.");
+        }
+
+        // a malformed IBAN is the requester's mistake, not an account we don't hold, so it gets a 400 rather than NOAP
+        if (!Iban.TryParse(request.PartyAccount?.Iban, out var parsed))
+        {
+            return Invalid("partyAccount.iban is not a valid IBAN.");
+        }
+
+        if ((InvalidBic(request.PartyAgent, "partyAgent") ?? InvalidBic(request.RequestingAgent, "requestingAgent")) is { } bicError)
+        {
+            return bicError;
         }
 
         var iban = parsed.Value;
@@ -54,13 +64,32 @@ public static class PayeeVerificationEndpoint
             return Results.Ok(VerifyName(name, await directory.FindAsync(iban, cancellationToken), engine));
         }
 
-        if (party.Name is null && Lei.TryParse(party.Identification?.OrganisationId?.Lei, out var lei))
+        if (party.Name is not null)
         {
-            return Results.Ok(VerifyCode(lei, await directory.FindAsync(iban, cancellationToken)));
+            return Invalid("party has both a name and an identification; send one of them.");
         }
 
-        return Results.BadRequest();
+        // LEI is the only organisation id scheme this service checks
+        if (party.Identification?.OrganisationId?.Lei is not { } leiText)
+        {
+            return Invalid("party needs a name or an organisation LEI; other identification schemes aren't supported.");
+        }
+
+        if (!Lei.TryParse(leiText, out var lei))
+        {
+            return Invalid("party.identification.organisationId.lei is not a valid LEI.");
+        }
+
+        return Results.Ok(VerifyCode(lei, await directory.FindAsync(iban, cancellationToken)));
     }
+
+    private static IResult? InvalidBic(Agent? agent, string field) =>
+        agent?.FinancialInstitutionId?.Bicfi is { } bic && !Bic.TryParse(bic, out _)
+            ? Invalid($"{field}.financialInstitutionId.bicfi is not a valid BIC.")
+            : null;
+
+    private static IResult Invalid(string detail) =>
+        Results.Problem(detail, statusCode: StatusCodes.Status400BadRequest, title: "The request is not valid.");
 
     private static PayeeVerificationResponse VerifyName(string name, AccountRecord? account, DecisionEngine engine)
     {
